@@ -16,29 +16,34 @@
 >   | otherwise         = n `div` a
 
 > stdRow :: Int -> Int -> Diagram B
-> stdRow n a = hcat (replicate ( stdNum n a ) stdCircle)
+> stdRow n a = hcat ( replicate ( stdNum n a ) stdCircle )
 
 > lastNum :: Int -> Int -> Int
 > lastNum n a = n - (numCol n a) * (stdNum n a)
 
 > lastRow :: Int -> Int -> Diagram B
-> lastRow n a = hcat (replicate ( lastNum n a ) lastCircle)
+> lastRow n a = hcat ( replicate ( lastNum n a ) lastCircle )
 
 > numCol :: Int -> Int -> Int
->-- numCol n a = ceiling ( fromIntegral ( n `div` ( ceiling ( fromIntegral (n `div` a) ) ) ) )
 > numCol n a
 >   | n `mod` a /= 0    = a-1
 >   | otherwise         = a
 
 > primeDiagram' :: Int -> Int -> Diagram B
-> primeDiagram' n a = vcat ( replicate (numCol n a) (stdRow n a) )
+> primeDiagram' n a = vcat ( replicate ( numCol n a ) ( stdRow n a ) )
 
 > primeDiagram :: Int -> Int -> Diagram B
 > primeDiagram n a = vcat ( [primeDiagram' n a, lastRow n a] )
 
+> primeDiagrams' :: Int -> [Diagram B]
+> primeDiagrams' n = [primeDiagram n a | a <- [1..ceiling ( sqrt ( fromIntegral n ) ) ] ]
 
-> example :: Diagram B
-> example = primeDiagram 17 1
+> primeDiagrams :: Int -> Diagram B
+> primeDiagrams n = vsep 2 (primeDiagrams' n)
 
-> main = mainWith (example)
+
+> main = do
+>   print "Enter a number: "
+>   n <- getLine
+>   mainWith ( primeDiagrams ( read n :: Int ) :: Diagram B )
 
