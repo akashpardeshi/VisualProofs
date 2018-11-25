@@ -1,8 +1,12 @@
 def main ():
     N = int ( input("Enter a number: ") )
     primeFactors = factorize ( N-1, set() )
-    print ( "The witness for %d is %d" % ( N, witness ( N, primeFactors ) ) )
-    certificate ( N, primeFactors, "    " )
+
+    if (witness (N, primeFactors) == -1):
+        print ( "%d is not prime" % ( N ) )
+    else:
+        print ( "The witness for %d is %d" % ( N, witness ( N, primeFactors ) ) )
+        certificate ( N, primeFactors, "    " )
 
 def factorize ( number, primeFactors ):
     factor = 3
@@ -19,20 +23,20 @@ def factorize ( number, primeFactors ):
 
 def witness ( number, primeFactors ):
     wit = 2
-    if number == 2:
-        return 2
+    if wit ** (number-1) % number != 1:
+        return -1 
     else: 
-        while ( ( wit ** (number-1) % number != 1 ) or ( 1 in [wit ** (number // i) % number for i in primeFactors] ) ):
+        while ( 1 in [wit ** (number // k) % number for k in primeFactors] ):
             wit += 1
-        return wit 
+    return wit 
 
 def certificate ( number, primeFactors, space ):
-    for i in primeFactors:
-        if i == 2:
+    for k in primeFactors:
+        if k == 2:
             print ( space + "The witness for 2 is 2")
         else:
-            print( space + "The witness for %d is %d" % (i, witness ( i, factorize( i - 1, set()) ) ) )
-            certificate ( i, factorize ( i - 1, set() ), space  + "     " )
+            print( space + "The witness for %d is %d" % ( k, witness ( k, factorize ( k - 1, set() ) ) ) )
+            certificate ( k, factorize ( k - 1, set() ), space  + "     " )
 
 if __name__ == "__main__":
     main()
