@@ -2,7 +2,6 @@
 Test for primality and generate a Pratt Certificate for primes
 '''
 
-
 def main ():
     N = int ( input("Enter a number: ") )
     primeFactors = factorize ( N-1, set() )
