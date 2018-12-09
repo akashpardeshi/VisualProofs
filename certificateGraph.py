@@ -1,32 +1,34 @@
 from graphviz import Digraph
-import sys
+# import sys
+
+'''
+Test for primality and generate a directed graph Pratt Certificate for primes
+'''
 
 def main ():
-     if len( sys.argv) != 2:
-         print ("Only provide one argument")
-         exit()
+#     if len( sys.argv) != 2:
+#         print ("Only provide one argument")
+#         exit()
 
-     N = int ( sys.argv[1] )
-     primeFactors = factorize ( N - 1, [] )
+#     N = int ( sys.argv[1] )
+    N = int ( input ("Enter a number: ") )
+    primeFactors = factorize ( N - 1, [] )
 
-     g = Digraph ('G', filename = 'sample-output/certificateGraph_' + '%s'%N + '.gv')
-     g.attr( 'node', shape='plaintext', fixedsize='true', width='0.9')
+    g = Digraph ('G', filename = 'sample-output/certificateGraph_' + '%s'%N + '.gv')
+    g.attr( 'node', shape='plaintext', fixedsize='true', width='0.9')
 
-
-     if N == 2:
-         print ( "2 is prime" )
-     elif witness ( N, primeFactors ) == -1:
-         print ( "%d is not prime" %N )
-     else:
-         graph ( N, witness ( N, primeFactors ), subLayer ( N, primeFactors ), g )
-         # g.attr(label = r'Conditions for primality: \n'
-         #                r'1: For all verticies (a, N), a ^ (N-1) is congruent to 1 (mod N) \n'
-         #                r'2: For all parent verticies (a, N) with child verticies (x, P), a ^ (N-1)/x and x divides N-1 \n'
-         #                r'3: For all parent verticies (a, N) with child verticies (x1, P1), (x2, P2), ..., (xi, Pi), N - 1 = x1 * x2 * ... * xN \n'
-         #                r'4: All verticies must eventually connect to the \'2\' vertex')
-         g.view()
+    if witness ( N, primeFactors ) == -1:
+        print ( "%d is not prime" %N )
+    else:
+        graph ( N, primeFactors, witness ( N, primeFactors ), subLayer ( N, primeFactors ), g, [] )
+        g.view()
 
 def factorize ( N, primeFactors ):
+    '''
+    Return a sorted list of the prime factors of a given number
+    :param: N:            the number to be prime factorized
+    :param: primeFactors: list (with duplicates) containing the current known prime factors of N
+    '''
     factor = 3
     if N == 1:
         return primeFactors
@@ -40,9 +42,14 @@ def factorize ( N, primeFactors ):
         return factorize ( N // factor, primeFactors )
 
 def witness ( N, primeFactors ):
+    '''
+    test for primality and if the input is prime, generate a (number, witness) tuple
+    :param: N           : the number to test for primality and generate a witness for
+    :param: primeFactors: a list of the prime factors of N - 1
+    '''
     a = 2
     if N == 2:
-        return 2 
+        return ( 2, 1 )
     elif a ** (N - 1) % N != 1:
         return -1 
     else: 
@@ -51,20 +58,38 @@ def witness ( N, primeFactors ):
     return ( N, a )
 
 def subLayer ( N, primeFactors ):
-    child = []
+    '''
+    Compute the set of nodes eminating from a parent node
+    :param: N          : the parent node
+    :param primeFactors: a list of the prime factors of N - 1
+    '''
+    child = set()
     for i in primeFactors:
-        child.append( witness (i, factorize (i-1, [] ) ) )
-    return child
+        child.add( witness (i, factorize (i - 1, [] ) ) )
+    return sorted ( list ( child ) )
 
-def graph (N, parent, child, g):
+def graph ( N, primeFactors, parent, child, g, existingNodes ):
+    '''
+    Draw the connections from a parent node to all children nodes
+    :param: N            : the number to generate the graph of 
+    :param: primeFactors : a list of the prime factors of N - 1
+    :param: parent       : the parent tuple node
+    :param: child        : a list of all children tuple nodes
+    :param: g            : the existing graph
+    :param: existingNodes: a list of the numbers on which we
+                           have already recursed on
+    '''
     for pair in child:
-        if pair == 2:
-            g.edge ( '%s' %(parent,), '2' )
-        else:
+        childN = pair[0]
+        childFactors = factorize ( childN - 1, [] )
+        for i in range ( primeFactors.count(childN) ):
             g.edge ( '%s' %(parent,), '%s' %(pair,) )
-            graph ( pair[0], pair, subLayer (pair[0], factorize ( pair[0] - 1, [] ) ), g )
+
+        if childN not in existingNodes: # statement to avoid drawing edges from tuples which have already had
+                                        # outgoing arcs
+            graph ( childN, childFactors, pair, subLayer ( childN, childFactors ), g, existingNodes )
+            existingNodes.append(childN)
+
 
 main()
-
-
 
