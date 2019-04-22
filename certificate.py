@@ -1,18 +1,10 @@
-'''
-Test for primality and generate a Pratt Certificate for primes
-'''
+import time
+import sys
 
-def main ():
-    N = int ( input ( "Enter a number: " ) )
-    primeFactors = factorize ( N - 1, set() )
-
-    if N == 2:
-        print ( "2 is prime" )
-    elif ( witness ( N, primeFactors ) == -1 ):
-        print ( "%d is not prime" % ( N ) )
-    else:
-        print ( "%d -- %d" % ( N, witness ( N, primeFactors ) ) )
-        certificate ( N, primeFactors, "    " )
+"""
+given a natural number, writes
+a Pratt Certificate to a text file.
+"""
 
 def factorize ( N, primeFactors ):
     '''
@@ -22,14 +14,14 @@ def factorize ( N, primeFactors ):
     '''
     factor = 3
     if N == 1:
-        return sorted ( list ( primeFactors ) )
+        return list ( primeFactors )[::-1]
     elif N % 2 == 0:
-        primeFactors.add(2)
+        primeFactors.append(2)
         return factorize ( N // 2, primeFactors )
     else:
         while N % factor != 0:
             factor += 2
-        primeFactors.add(factor)
+        primeFactors.append(factor)
         return factorize ( N // factor, primeFactors )
 
 def witness ( N, primeFactors ):
@@ -46,7 +38,7 @@ def witness ( N, primeFactors ):
             a += 1
     return a 
 
-def certificate ( N, primeFactors, space ):
+def certificate ( N, primeFactors, space, outputFile ):
     '''
     generate a Pratt Certificate for a prime number
     :param: N:            the number to be issued a certificate
@@ -55,10 +47,35 @@ def certificate ( N, primeFactors, space ):
     '''
     for k in primeFactors:
         if k == 2:
-            print ( space + "2")
+            outputFile.write(space + "2--1\n")
         else:
-            print( space + "%d -- %d" % ( k, witness ( k, factorize ( k - 1, set() ) ) ) )
-            certificate ( k, factorize ( k - 1, set() ), space  + "     " )
+            outputFile.write(space + "%d--%d\n" % ( k, witness ( k, factorize ( k - 1, [] ) ) ) )
+            certificate ( k, factorize ( k - 1, [] ), space  + "\t", outputFile )
 
-if __name__ == "__main__":
-    main()
+def main ():
+    # N = int ( input ( "Enter a number: " ) )
+    N = int (sys.argv[1])
+    outputFile = open("certificate.txt", "w")
+    timeFile = open("times.txt", "a")
+
+    startTime = time.time()
+
+    primeFactors = factorize ( N - 1, [] )
+    if N == 2:
+        outputFile.write("2--1\n")
+        endTime = time.time()
+    elif ( witness ( N, primeFactors ) == -1 ):
+        print ( "%d is not prime" % ( N ) )
+        endTime = time.time()
+    else:
+        outputFile.write("%d--%d\n" % ( N, witness ( N, primeFactors ) ))
+        certificate ( N, primeFactors, "\t", outputFile )
+        endTime = time.time()
+
+    # print(endTime - startTime)
+    timeFile.write(str(endTime - startTime) + "\n")
+
+    timeFile.close()
+    outputFile.close()
+
+main()
